@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:neobis_auth_project/styles_consts.dart';
 
-class MainView extends StatelessWidget {
-  const MainView({super.key});
+class IntroView extends StatelessWidget {
+  const IntroView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +27,8 @@ class MainView extends StatelessWidget {
           onPressed: () {
             Navigator.pushNamed(context, '/login');
           },
-          child: const Text("Log In"),
           style: StylesConsts().elevatedButtonStyle,
+          child: const Text("Log In"),
         ),
         const SizedBox(
           height: 30,
@@ -37,8 +37,8 @@ class MainView extends StatelessWidget {
           onPressed: () {
             Navigator.pushNamed(context, '/register');
           },
-          child: const Text('Register'),
           style: StylesConsts().elevatedButtonStyle,
+          child: const Text('Register'),
         ),
       ],
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:neobis_auth_project/presentation/loading_page/loading_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,12 +27,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   _submitEvent() async {
+    buildLoading(context);
     SharedPreferences pref = await SharedPreferences.getInstance();
     var answ = pref.getString(_usernameController.text) ?? '';
+    await Future.delayed(const Duration(seconds: 2));
 
     if (answ.isNotEmpty) {
       if (answ == _passwordController.text) {
-        print("success");
+        Navigator.of(context).pop();
+        Navigator.pushNamed(context, '/');
       } else {
         print("passwor incorrect");
       }
