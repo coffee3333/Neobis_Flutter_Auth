@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:neobis_auth_project/core/consts/assets_consts.dart';
 import 'package:neobis_auth_project/data/memory.dart';
 import 'package:neobis_auth_project/domain/model/user.dart';
-import 'package:neobis_auth_project/presentation/loading_page/loading_view.dart';
+import 'package:neobis_auth_project/presentation/custom_widgets/header_widget.dart';
+import 'package:neobis_auth_project/presentation/custom_widgets/keyboard_aware.dart';
+import 'package:neobis_auth_project/presentation/custom_widgets/loading_view.dart';
 import 'package:neobis_auth_project/core/consts/styles_consts.dart';
+import 'package:neobis_auth_project/presentation/custom_widgets/logo_widget.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -39,10 +41,12 @@ class _RegisterScreen extends State<RegisterScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            SvgPicture.asset(
-              AssetsConsts.registerIcon,
-              width: 150,
-              height: 150,
+            const KeyboardAwareWidget(
+              onOpen: true,
+              child: HeaderOfPage(header: 'Sign Up'),
+            ),
+            const KeyboardAwareWidget(
+              child: LogoSvg(assetsConsts: AssetsConsts.registerIcon),
             ),
             StylesConsts.sizedBox70,
             _loginFormField(),

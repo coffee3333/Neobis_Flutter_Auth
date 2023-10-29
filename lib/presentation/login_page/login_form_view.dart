@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:neobis_auth_project/core/consts/assets_consts.dart';
+import 'package:neobis_auth_project/core/consts/routes_consts.dart';
 import 'package:neobis_auth_project/core/consts/styles_consts.dart';
 import 'package:neobis_auth_project/data/memory.dart';
 import 'package:neobis_auth_project/domain/model/user.dart';
-import 'package:neobis_auth_project/presentation/loading_page/loading_view.dart';
+import 'package:neobis_auth_project/presentation/custom_widgets/header_widget.dart';
+import 'package:neobis_auth_project/presentation/custom_widgets/keyboard_aware.dart';
+import 'package:neobis_auth_project/presentation/custom_widgets/loading_view.dart';
+import 'package:neobis_auth_project/presentation/custom_widgets/logo_widget.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,10 +40,12 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            SvgPicture.asset(
-              AssetsConsts.loginIcon,
-              width: 150,
-              height: 150,
+            const KeyboardAwareWidget(
+              onOpen: true,
+              child: HeaderOfPage(header: 'Sign In'),
+            ),
+            const KeyboardAwareWidget(
+              child: LogoSvg(assetsConsts: AssetsConsts.loginIcon),
             ),
             StylesConsts.sizedBox70,
             _loginFormField(),
@@ -80,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
         GestureDetector(
           onTap: () {
             _clearFields();
-            Navigator.pushNamed(context, '/register');
+            Navigator.pushNamed(context, RoutesConsts.register);
           },
           child: const Text(
             'Sign up',
@@ -141,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // ignore: use_build_context_synchronously
         Navigator.of(context).pop();
         // ignore: use_build_context_synchronously
-        Navigator.pushReplacementNamed(context, '/');
+        Navigator.pushReplacementNamed(context, RoutesConsts.home);
         _clearFields();
       } else {
         setState(() {
