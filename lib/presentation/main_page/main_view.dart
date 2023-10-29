@@ -6,7 +6,6 @@ class MainView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey,
       alignment: Alignment.center,
       child: const Text("Welcome"),
     );

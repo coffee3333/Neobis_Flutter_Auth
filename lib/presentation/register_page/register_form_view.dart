@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:neobis_auth_project/core/consts/assets_consts.dart';
+import 'package:neobis_auth_project/data/memory.dart';
+import 'package:neobis_auth_project/domain/model/user.dart';
 import 'package:neobis_auth_project/presentation/loading_page/loading_view.dart';
-import 'package:neobis_auth_project/styles_consts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:neobis_auth_project/core/consts/styles_consts.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,7 +14,9 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreen extends State<RegisterScreen> {
+  bool _loginCheck = true;
   bool _checkPassword = true;
+  bool _checkConfirmPassword = true;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -21,34 +26,54 @@ class _RegisterScreen extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      alignment: Alignment.center,
       margin: const EdgeInsets.all(16.0),
       child: _getRegisterForm(context),
     );
   }
 
-  Form _getRegisterForm(BuildContext context) {
+  Form _getRegisterForm(BuildContext contex) {
     return Form(
       key: _formKey,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          _loginFormField(),
-          _passwordFormField(),
-          _passwordConfirmField(),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate() && _checkPassword) {
-                  _registerEvent();
-                }
-              },
-              style: StylesConsts().elevatedButtonStyle,
-              child: const Text('Register'),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            SvgPicture.asset(
+              AssetsConsts.registerIcon,
+              width: 150,
+              height: 150,
             ),
-          ),
-        ],
+            StylesConsts.sizedBox70,
+            _loginFormField(),
+            _passwordFormField(),
+            _passwordConfirmField(),
+            StylesConsts.sizedBox20,
+            _registerButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  SizedBox _registerButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            _loginCheck = true;
+          });
+          _validationPassword();
+          _validationConfirmPassword();
+          if (_formKey.currentState!.validate() &&
+              _checkPassword &&
+              _checkConfirmPassword) {
+            _registerEvent();
+          }
+        },
+        style: StylesConsts().elevatedButtonStyle,
+        child: const Text('Register'),
       ),
     );
   }
@@ -56,9 +81,11 @@ class _RegisterScreen extends State<RegisterScreen> {
   TextFormField _loginFormField() {
     return TextFormField(
       controller: _usernameController,
-      decoration: const InputDecoration(labelText: 'Login'),
+      decoration: InputDecoration(
+          labelText: 'Login',
+          errorText: _loginCheck ? null : 'This login is already exist'),
       validator: (value) {
-        if (value!.isEmpty) {
+        if (value == null || value.isEmpty) {
           return 'Enter login';
         }
         return null;
@@ -69,10 +96,14 @@ class _RegisterScreen extends State<RegisterScreen> {
   TextFormField _passwordFormField() {
     return TextFormField(
       controller: _passwordController,
-      decoration: const InputDecoration(labelText: 'Password'),
+      decoration: InputDecoration(
+        labelText: 'Password',
+        errorText:
+            _checkPassword ? null : 'Password should be at least 6 characters',
+      ),
       obscureText: true,
       validator: (value) {
-        if (value!.isEmpty) {
+        if (value == null || value.isEmpty) {
           return 'Enter password';
         }
         return null;
@@ -84,14 +115,12 @@ class _RegisterScreen extends State<RegisterScreen> {
     return TextFormField(
       controller: _passwordCheckController,
       decoration: InputDecoration(
-          labelText:
-              _checkPassword ? "Confirm password" : "Password shood be same",
-          labelStyle:
-              TextStyle(color: _checkPassword ? Colors.grey : Colors.red)),
+        labelText: "Confirm password",
+        errorText: _checkConfirmPassword ? null : "Password shood be same",
+      ),
       obscureText: true,
-      onChanged: _validationConfirmPass,
       validator: (value) {
-        if (value!.isEmpty) {
+        if (value == null || value.isEmpty) {
           return 'Confirm the password';
         }
         return null;
@@ -99,19 +128,11 @@ class _RegisterScreen extends State<RegisterScreen> {
     );
   }
 
-  void _validationConfirmPass(text) {
-    if (text.isNotEmpty) {
-      if (text != _passwordController.text) {
-        setState(
-          () {
-            _checkPassword = false;
-          },
-        );
-      } else {
-        setState(() {
-          _checkPassword = true;
-        });
-      }
+  _validationPassword() {
+    if (_passwordController.text.length <= 5) {
+      setState(() {
+        _checkPassword = false;
+      });
     } else {
       setState(() {
         _checkPassword = true;
@@ -119,21 +140,36 @@ class _RegisterScreen extends State<RegisterScreen> {
     }
   }
 
-  _saveUser({required String login, required String pass}) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString(login, pass);
-    await Future.delayed(const Duration(seconds: 2));
+  _validationConfirmPassword() {
+    if (_passwordCheckController.text != _passwordController.text) {
+      setState(() {
+        _checkConfirmPassword = false;
+      });
+    } else {
+      setState(() {
+        _checkConfirmPassword = true;
+      });
+    }
   }
 
   _registerEvent() async {
     buildLoading(context);
-    await _saveUser(
-        login: _usernameController.text, pass: _passwordController.text);
-    _formKey.currentState?.reset();
-    _usernameController.clear();
-    _passwordController.clear();
-    _passwordCheckController.clear();
-    Navigator.of(context).pop();
-    Navigator.pushNamed(context, '/login');
+    User user = User(
+        login: _usernameController.text, password: _passwordController.text);
+
+    if (!await Memory().checkUser(user: user)) {
+      Memory().saveUser(user: user);
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+      print('success');
+    } else {
+      setState(() {
+        _loginCheck = false;
+      });
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+    }
   }
 }

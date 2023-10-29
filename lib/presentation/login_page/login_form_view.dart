@@ -1,90 +1,161 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:neobis_auth_project/core/consts/assets_consts.dart';
+import 'package:neobis_auth_project/core/consts/styles_consts.dart';
+import 'package:neobis_auth_project/data/memory.dart';
+import 'package:neobis_auth_project/domain/model/user.dart';
 import 'package:neobis_auth_project/presentation/loading_page/loading_view.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  bool _wrongLogin = false;
+  bool _wrongPass = false;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => true,
-      child: Container(
-        alignment: Alignment.center,
-        margin: const EdgeInsets.all(16.0),
-        child: _getForm(),
-      ),
+    return Container(
+      alignment: Alignment.center,
+      margin: const EdgeInsets.all(16.0),
+      child: _getForm(),
     );
-  }
-
-  _submitEvent() async {
-    buildLoading(context);
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    var answ = pref.getString(_usernameController.text) ?? '';
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (answ.isNotEmpty) {
-      if (answ == _passwordController.text) {
-        Navigator.of(context).pop();
-        Navigator.pushNamed(context, '/');
-      } else {
-        print("passwor incorrect");
-      }
-    } else {
-      print("no akk");
-    }
   }
 
   Form _getForm() {
     return Form(
       key: _formKey,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          TextFormField(
-            controller: _usernameController,
-            decoration: const InputDecoration(labelText: 'Логин'),
-            validator: (value) {
-              if (value!.isEmpty) {
-                return 'Пожалуйста, введите логин.';
-              }
-              return null;
-            },
-          ),
-          TextFormField(
-            controller: _passwordController,
-            decoration: const InputDecoration(labelText: 'Пароль'),
-            obscureText: true,
-            validator: (value) {
-              if (value!.isEmpty) {
-                return 'Пожалуйста, введите пароль.';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _submitEvent();
-                }
-              },
-              child: const Text('Войти'),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            SvgPicture.asset(
+              AssetsConsts.loginIcon,
+              width: 150,
+              height: 150,
             ),
-          ),
-        ],
+            StylesConsts.sizedBox70,
+            _loginFormField(),
+            _passwordFormField(),
+            StylesConsts.sizedBox20,
+            _logInButton(),
+            StylesConsts.sizedBox20,
+            _signUpLink(),
+          ],
+        ),
       ),
     );
+  }
+
+  SizedBox _logInButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            _wrongLogin = false;
+            _wrongPass = false;
+          });
+          if (_formKey.currentState!.validate()) {
+            _loginEvent();
+          }
+        },
+        child: const Text('Login'),
+      ),
+    );
+  }
+
+  Row _signUpLink() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        const Text('Don’t have an Account? '),
+        GestureDetector(
+          onTap: () {
+            _clearFields();
+            Navigator.pushNamed(context, '/register');
+          },
+          child: const Text(
+            'Sign up',
+            style: TextStyle(
+              color: Colors.blue,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  _clearFields() {
+    _usernameController.clear();
+    _passwordController.clear();
+  }
+
+  TextFormField _loginFormField() {
+    return TextFormField(
+      controller: _usernameController,
+      decoration: InputDecoration(
+        labelText: 'Login',
+        errorText: _wrongLogin ? 'Login is not correct' : null,
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter the login';
+        }
+        return null;
+      },
+    );
+  }
+
+  TextFormField _passwordFormField() {
+    return TextFormField(
+      controller: _passwordController,
+      decoration: InputDecoration(
+        labelText: 'Password',
+        errorText: _wrongPass ? 'Password is not correct' : null,
+      ),
+      obscureText: true,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter the password';
+        }
+        return null;
+      },
+    );
+  }
+
+  _loginEvent() async {
+    buildLoading(context);
+    User user = User(
+        login: _usernameController.text, password: _passwordController.text);
+
+    if (await Memory().checkUser(user: user)) {
+      if (await Memory().checkUserPassword(user: user)) {
+        // ignore: use_build_context_synchronously
+        Navigator.of(context).pop();
+        // ignore: use_build_context_synchronously
+        Navigator.pushReplacementNamed(context, '/');
+        _clearFields();
+      } else {
+        setState(() {
+          _wrongPass = true;
+        });
+        // ignore: use_build_context_synchronously
+        Navigator.of(context).pop();
+      }
+    } else {
+      setState(() {
+        _wrongLogin = true;
+      });
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+    }
   }
 }
