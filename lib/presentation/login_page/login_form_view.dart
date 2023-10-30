@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:neobis_auth_project/core/consts/assets_consts.dart';
 import 'package:neobis_auth_project/core/consts/routes_consts.dart';
 import 'package:neobis_auth_project/core/consts/styles_consts.dart';

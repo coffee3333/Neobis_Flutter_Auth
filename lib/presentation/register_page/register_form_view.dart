@@ -167,6 +167,7 @@ class _RegisterScreen extends State<RegisterScreen> {
       Navigator.of(context).pop();
       // ignore: use_build_context_synchronously
       Navigator.of(context).pop();
+      // ignore: avoid_print
       print('success');
     } else {
       setState(() {
