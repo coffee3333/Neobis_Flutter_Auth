@@ -11,7 +11,7 @@ class LogoSvg extends StatelessWidget {
       assetsConsts,
       width: 150,
       height: 150,
-      color: Colors.blue.shade400,
+      colorFilter: ColorFilter.mode(Colors.blue.shade400, BlendMode.srcIn),
     );
   }
 }

@@ -1,9 +1,8 @@
 import 'dart:convert';
-
 import 'package:neobis_auth_project/domain/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Memory {
+mixin Memory {
   saveUser({required User user}) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String userJson = jsonEncode(user.toJson());
@@ -13,7 +12,7 @@ class Memory {
   Future<bool> checkUser({required User user}) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await Future.delayed(
-        const Duration(seconds: 2)); //For emulation get request
+        const Duration(seconds: 1)); //For emulation get request
     final value = prefs.getString(user.login);
     if (value == null) {
       return false;
@@ -24,7 +23,7 @@ class Memory {
   Future<bool> checkUserPassword({required User user}) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await Future.delayed(
-        const Duration(seconds: 2)); //For emulation get request
+        const Duration(seconds: 1)); //For emulation get request
 
     final value = prefs.getString(user.login);
     if (value != null) {

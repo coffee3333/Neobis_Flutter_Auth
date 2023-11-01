@@ -57,8 +57,9 @@ dev_dependencies:
 flutter:
 
   assets:
-    - lib/core/assets/input-icon.svg
-    - lib/core/assets/register.svg
+    - assets/input-icon.svg
+    - assets/register.svg
+    - assets/run.gif
 
 
   # The following line ensures that the Material Icons font is

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:neobis_auth_project/core/consts/assets_consts.dart';
 import 'package:neobis_auth_project/data/memory.dart';
 import 'package:neobis_auth_project/domain/model/user.dart';
-import 'package:neobis_auth_project/presentation/custom_widgets/header_widget.dart';
-import 'package:neobis_auth_project/presentation/custom_widgets/keyboard_aware.dart';
 import 'package:neobis_auth_project/presentation/custom_widgets/loading_view.dart';
 import 'package:neobis_auth_project/core/consts/styles_consts.dart';
 import 'package:neobis_auth_project/presentation/custom_widgets/logo_widget.dart';
@@ -15,10 +13,8 @@ class RegisterScreen extends StatefulWidget {
   createState() => _RegisterScreen();
 }
 
-class _RegisterScreen extends State<RegisterScreen> {
-  bool _loginCheck = true;
-  bool _checkPassword = true;
-  bool _checkConfirmPassword = true;
+class _RegisterScreen extends State<RegisterScreen> with Memory {
+  bool _loginCheck = true; //For checking existing logins in memory
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -41,13 +37,7 @@ class _RegisterScreen extends State<RegisterScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const KeyboardAwareWidget(
-              onOpen: true,
-              child: HeaderOfPage(header: 'Sign Up'),
-            ),
-            const KeyboardAwareWidget(
-              child: LogoSvg(assetsConsts: AssetsConsts.registerIcon),
-            ),
+            const LogoSvg(assetsConsts: AssetsConsts.registerIcon),
             StylesConsts.sizedBox70,
             _loginFormField(),
             _passwordFormField(),
@@ -56,28 +46,6 @@ class _RegisterScreen extends State<RegisterScreen> {
             _registerButton(),
           ],
         ),
-      ),
-    );
-  }
-
-  SizedBox _registerButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          setState(() {
-            _loginCheck = true;
-          });
-          _validationPassword();
-          _validationConfirmPassword();
-          if (_formKey.currentState!.validate() &&
-              _checkPassword &&
-              _checkConfirmPassword) {
-            _registerEvent();
-          }
-        },
-        style: StylesConsts().elevatedButtonStyle,
-        child: const Text('Register'),
       ),
     );
   }
@@ -100,15 +68,15 @@ class _RegisterScreen extends State<RegisterScreen> {
   TextFormField _passwordFormField() {
     return TextFormField(
       controller: _passwordController,
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         labelText: 'Password',
-        errorText:
-            _checkPassword ? null : 'Password should be at least 6 characters',
       ),
       obscureText: true,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Enter password';
+        } else if (_passwordController.text.length <= 5) {
+          return 'Password should be at least 6 characters';
         }
         return null;
       },
@@ -118,63 +86,63 @@ class _RegisterScreen extends State<RegisterScreen> {
   TextFormField _passwordConfirmField() {
     return TextFormField(
       controller: _passwordCheckController,
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         labelText: "Confirm password",
-        errorText: _checkConfirmPassword ? null : "Password shood be same",
       ),
       obscureText: true,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Confirm the password';
+        } else if (_passwordCheckController.text != _passwordController.text) {
+          return "Password shood be same";
         }
         return null;
       },
     );
   }
 
-  _validationPassword() {
-    if (_passwordController.text.length <= 5) {
-      setState(() {
-        _checkPassword = false;
-      });
-    } else {
-      setState(() {
-        _checkPassword = true;
-      });
-    }
-  }
+  SizedBox _registerButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            _loginCheck =
+                true; // on registration event we are clearing old state
+          });
 
-  _validationConfirmPassword() {
-    if (_passwordCheckController.text != _passwordController.text) {
-      setState(() {
-        _checkConfirmPassword = false;
-      });
-    } else {
-      setState(() {
-        _checkConfirmPassword = true;
-      });
-    }
+          if (_formKey.currentState!.validate()) {
+            _registerEvent();
+          }
+        },
+        style: StylesConsts().elevatedButtonStyle,
+        child: const Text('Register'),
+      ),
+    );
   }
 
   _registerEvent() async {
-    buildLoading(context);
-    User user = User(
+    buildLoading(context); // loading widget
+    final user = User(
         login: _usernameController.text, password: _passwordController.text);
 
-    if (!await Memory().checkUser(user: user)) {
-      Memory().saveUser(user: user);
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
-      // ignore: avoid_print
-      print('success');
-    } else {
+    //checking for existing users in memory
+    if (await checkUser(user: user)) {
       setState(() {
-        _loginCheck = false;
+        _loginCheck =
+            false; // if exist then we are changing state to show in field
       });
       // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(); // clearing loading widget
+      return;
     }
+
+    saveUser(user: user); // if not existing in memory then we are saving
+    // ignore: use_build_context_synchronously
+    Navigator.of(context).pop(); // clearing loading widget
+    // ignore: use_build_context_synchronously
+    Navigator.of(context).pop(); // Going back
+    // ignore: avoid_print
+    print('success');
   }
 }
